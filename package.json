@@ -1,0 +1,19 @@
+{
+  "name": "card_game",
+  "version": "1.0.0",
+  "description": "Generic Card Game ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Amit Dayal",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "browserify-middleware": "^8.1.1",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "wrtc": "^0.4.4"
+  }
+}
