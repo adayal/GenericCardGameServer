@@ -33,7 +33,7 @@ class RuleBookAbstract {
             return;
         }
 
-        this.selectedGame.doSpecialAction(game, socket, payload);    
+        this.selectedGame.doSpecialAction(game, socket, socketId, payload);    
     }
 
     playCard(game, socket, socketId, payload) {
