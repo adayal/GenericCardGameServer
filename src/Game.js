@@ -17,7 +17,8 @@ class Game {
     }
 
     loadGames(socketWhoStarted, gameSelected) {
-        if (!this.gameSelected && this.loadedGames[gameSelected].CanLoadGame(this)) {
+        if (!this.gameSelected && this.loadedGames[gameSelected].canLoadGame(this)) {
+            this.loadedGames[gameSelected].startGame(this, socket);
             this.gameSelected = this.loadedGames[gameSelected];
             this.gameSelected.setFirstPlayer(socketWhoStarted.id);
             return true;
@@ -25,9 +26,9 @@ class Game {
         return false;
     }
 
-    doAction(socket, action) {
+    doAction(game, socket, socketid, action) {
         if (this.gameSelected) {
-            this.gameSelected.handle(this, socket, action);
+            this.gameSelected.handle(this, socket, socketid, action);
         } else {
             socket.emit(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED);
         }
@@ -81,7 +82,15 @@ class Game {
         })
     }
 
+    doSpecialAction(game, socket, payload) {
+
+    }
+
     getPlayers() {
         return this.players;
+    }
+
+    getSockets() {
+        return this.sockets;
     }
 }

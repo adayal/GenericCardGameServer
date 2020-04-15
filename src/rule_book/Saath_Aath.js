@@ -1,6 +1,7 @@
 import { RuleBookAbstract } from "./Rulebook";
 import { Deck } from "../Deck";
 import { Player } from "../Player";
+import { Card } from "../Card";
 const Constants = require('../shared/constants');
 
 class SaathAaath extends RuleBookAbstract {
@@ -8,10 +9,10 @@ class SaathAaath extends RuleBookAbstract {
         this.gameLoaded = true;
         this.gameInSession = false;
         this.REQUIRED_PLAYERS = 2;
-        this.playingFieldPile = [];
-        this.playingField = [];
         this.waitingForPlayer = this.firstPlayer;
-        
+        this.trumpSuit = "";
+        this.deck = null;
+        this.totalPoints = 15;
     }
 
     giveCard(giver, receiver, card) {
@@ -31,69 +32,46 @@ class SaathAaath extends RuleBookAbstract {
     }
 
     getOpponent(currentPlayer) {
-        return this.players[0].getPlayerByName() == currentPlayer.getPlayerName() ? this.players[1] : this.players[0];
+        return this.players[0].getPlayerId() == currentPlayer.getPlayerId() ? this.players[1] : this.players[0];
     }
 
-    playCard(game, socketPlayer, payload) {
-        let cardToPlay = this.deck.getCard(payload.card);
-        if (!cardToPlay) {
-            //cannot find card that was requested
-            socketPlayer.emit(Constants.CLIENT_MSG.CARD_NOT_FOUND);
-            return false;
+    playCard(game, socket, socketPlayerId, payload) {
+        
+        evaluateRules(game, socket);
+        
+        //step 1: check how many cards are in the pile
+        //step 2: check if the socketPlayer owns the card
+        //step 3: add the card to the field pile
+        //step 4: remove card from player's possession
+        //step 5: evaluate the field
+
+        if (this.deck.getPlayingField().length == this.REQUIRED_PLAYERS) {
+            //reject
+            return;
         }
-        this.players.foreach(player => {
-            let destWasPlayer = false;
-            if (player.getPlayerName() == payload.dest) {
-                destWasPlayer = true;
-                let receiver = this.getPlayerByName(payload.dest);
-                if (receiver) {
-                    if (this.giveCard(player, receiver, cardToPlay)) {
-                        return true;
-                    }
-                    //emit error
-                    return false;
-                } else {
-                    
-                    //cannot find destination
-                    return false;
-                }
-            }
-            if (!destWasPlayer) {
-                cardToPlay.setIsCardDown(false);
-                //playing to field
-                //check if this player is the player's who we are waiting for
-                //check how many cards are already on the playing field
-                
-                if (this.deck.playingField.length < this.REQUIRED_PLAYERS) {
-                    //if the field has no cards, then the requested player should be the first player
-                    if (this.deck.playingField.length == 0 && this.waitingForPlayer == socketPlayer.id) {
-                        //do action, right player is playing card
-                        this.waitingForPlayer = getOpponent(player).getPlayerId();
-                        player.playCard(payload.card);
-                        this.deck.playToField(payload);
-                    } else if (this.deck.playingField.length == 1 && this.waitingForPlayer == socketPlayer.id) {
-                        //do action, right player is playing card
-                        this.waitingForPlayer = getOpponent(player).getPlayerId();
-                        player.playCard(cardToPlay);
-                        this.deck.playToField(payload);
-                    } else {
-                        //throw error back to player, not waiting for that specific player to play
-                    }
 
-                } else {
-                    //throw an error back to the player, required players not there
-                }
-            }
+        let currentPlayer = this.players[0].getPlayerId == socketPlayerId ? this.player[0] : this.player[1];
+        let currentCard = currentPlayer.findCard(payload.card);
+        
+        if (!currentCard) {
+            //card doesn't exist or user doesn't have it
+            socket.emit(Constants.CLIENT_MSG.CARD_NOT_FOUND);
+            return;
+        }
 
-            //regardless of error or not, evaluate the rules to determine if there is a winner
-            this.evaluateRules(game, socketPlayer);
+        this.deck.playToField(currentCard);
+        
+        this.players.forEach(player => {
+            if (player.getPlayerId() == socketPlayerId) {
+                player.playCard(currentCard);
+            }
         });
 
-        
+        evaluateRules(game, socket);
     }
 
     /*
-    * Init game here
+    * Check Init
     */
     canLoadGame(game, socket) {
         if (this.gameLoaded) {
@@ -102,24 +80,238 @@ class SaathAaath extends RuleBookAbstract {
 
         this.players = game.getPlayers();
 
-        //game lock
-        if (!this.gameInSession && this.players.length == this.REQUIRED_PLAYERS) {
-            this.gameInSession = true;
-            this.deck = new Deck();
-            this.suffleDeck();
-            //each player gets 30 cards but the card orientation can be different (up or down)
-            this.players.foreach(player => {
+        return !this.gameInSession && this.players.length == this.REQUIRED_PLAYERS && this.trumpSuit != "";
+    }
 
-            })
-            this.dealCardsToPlayers(5);
-            /*
-            tell 
-            */
+    //helper method
+    discardInitialCards() {
+        for (let i = 1; i <= 6; i++) {
+            for (let j = 0; j < 4; j++) {
+                this.deck.discardCard(getCard({number: i, cardType: j}));
+            }
+        }
+        this.deck.discardCard(getCard({number: 7, cardType: 0}));
+        this.deck.discardCard(getCard({number: 7, cardType: 1}));
+    }
+
+
+    /*
+    * Init Game, Set Deck and players
+    */
+    startGame(game, socket) {
+
+        this.gameInSession = true;
+        this.deck = new Deck();
+        this.discardInitialCards();
+
+        this.suffleDeck();
+        //each player gets 15 cards but the card orientation can be different (up or down)
+        this.players.foreach(player => {
+
+            //first 5 are faced down and visible (player's hand) 
+            //next 5 are not visible and faced down (player's faced down hand)
+            //next 5 are visible and faced up (player's faced up hand)
+            this.dealCardsToPlayers(game, player, 5, true, true);
+            this.dealCardsToPlayers(game, player, 5, false, true);
+            this.dealCardsToPlayers(game, player, 5, true, false);
+        })
+        
+        //Set the number of points needed for player 1 to 8
+        this.players[0].setPointsNeeded(8);
+        //Set the number of points needed for player 2 to 7
+        this.players[0].setPointsNeeded(7);
+
+        //send cards to players
+        socket.to(this.players[0].emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[0].getHand()));
+        socket.to(this.players[1].emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[1].getHand()));
+
+        //Ask player 1 to pick the trump
+        socket.to(this.players[0].emit(Constants.CLIENT_MSG.PICK_TRUMP));
+    }
+
+    /**
+     * Rules are simple:
+     *  Game can only be evaluated when there are 2 cards in the field
+     *  When the combined points in the game = 15, the game is over
+     *  Cards are evaluated in the following order:
+     *  trump && nonTrump --> trump
+     *  nonTrump && nonTrump
+     *      --> same suite ? higher nonTrump : card of first player
+     *  trump && trump --> higher trump
+     * @param {*} game 
+     * @param {*} socket 
+     */
+    evaluateRules(game, socket) {
+        let totalPoints = this.players.reduce((a,b) => {
+            return a.points + b.points;
+        }, 0);
+
+            if (this.checkForWin(game, socket, totalPoints)) {
+                //houskeeping
+                this.restartGame(game);
+            } else {
+            //no winner yet, keep playing the game
+            if (this.deck.getPlayingField() != this.REQUIRED_PLAYERS) {
+                return;
+            }
+
+            let localField = this.deck.getPlayingField();
+            /**
+             * Cards are evaluated in the following order:
+            *  trump && nonTrump --> trump
+            *  nonTrump && nonTrump
+            *      --> same suite ? higher nonTrump : card of first player
+            *  trump && trump --> higher trump
+             * 
+             */
+            if (Card.getCardTypeByNumber(localField[0].getCardType()).toUpperCase() == this.trumpSuit.toUpperCase() &&
+                Card.getCardTypeByNumber(localField[1].getCardType()).toUpperCase() == this.trumpSuit.toUpperCase()) {
+                //both are trumps
+                if (localField[0].getCardValue() > localField[1].getCardValue()) {
+                    //first card is the winner
+                    this.players.find(function(elem, index, array) {
+                        if (elem.getPlayerId() == localField[0].getCurrentOwner()) {
+                            socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                            socket.to(localField[1]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                        }
+                    });
+                } else {
+                    //second card is the winner
+                    this.players.find(function(elem, index, array) {
+                        if (elem.getPlayerId() == localField[1].getCurrentOwner()) {
+                            socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                            socket.to(localField[0]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                        }
+                    });
+                }
+
+            } else if (Card.getCardTypeByNumber(localField[0].getCardType()).toUpperCase() == this.trumpSuit.toUpperCase()) {
+                //first card is a trump and wins automatically
+                this.players.find(function(elem, index, array) {
+                    if (elem.getPlayerId() == localField[0].getCurrentOwner()) {
+                        socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                        socket.to(localField[1]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                    }
+                });
+                
+            } else if (Card.getCardTypeByNumber(localField[1].getCardType()).toUpperCase() == this.trumpSuit.toUpperCase()) {
+                //second card is a trump and wins automatically
+                this.players.find(function(elem, index, array) {
+                    if (elem.getPlayerId() == localField[1].getCurrentOwner()) {
+                        socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                        socket.to(localField[0]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                    }
+                });
+            } else {
+                //both cards are not trumps
+                if (localField[0].getCardType() == localField[1].getCardType()) {
+                    if (localField[0].getCardValue() > localField[1].getCardValue()) {
+                        //first card is the winner
+                        this.players.find(function(elem, index, array) {
+                            if (elem.getPlayerId() == localField[0].getCurrentOwner()) {
+                                socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                                socket.to(localField[1]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                            }
+                        });
+                    } else {
+                        //second card is the winner
+                        this.players.find(function(elem, index, array) {
+                            if (elem.getPlayerId() == localField[1].getCurrentOwner()) {
+                                socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                                socket.to(localField[0]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                            }
+                        });
+                    }
+                } else {
+                    //first card is the winner
+                    this.players.find(function(elem, index, array) {
+                        if (elem.getPlayerId() == localField[0].getCurrentOwner()) {
+                            socket.to(elem.getPlayerId).emit(Constants.CLIENT_MSG.LOCAL_WINNER);
+                            socket.to(localField[1]).emit(Constants.CLIENT_MSG.LOCAL_LOSER);
+                        }
+                    });
+                }
+            }
+
+            if (this.checkForWin(game, socket, totalPoints)) {
+                //houskeeping
+                this.restartGame(game);
+            }
+
+            this.deck.emptyPlayingField();
         }
     }
 
-    evaluateRules(game, socket) {
+    checkForWin(game, socket, totalPoints) {
+        if (totalPoints == this.totalPoints) {
+            let player1 = this.players[0];
+            let player2 = this.players[1];
+            if (player1.getPoints() == player1.getPointsNeeded()) {
+                //game ended in draw
+                socket.to(player1.getPlayerId()).emit(Constants.CLIENT_MSG.NO_WINNER);
+                socket.to(player2.getPlayerId()).emit(Constants.CLIENT_MSG.NO_WINNER);
+            } else if (player1.getPoints() < player1.getPointsNeeded()) {
+                //player 1 unable to make quota
+                socket.to(player1.getPlayerId()).emit(Constants.CLIENT_MSG.LOSER, player1.getPoints() - player1.getPointsNeeded());
+                socket.to(player2.getPlayerId()).emit(Constants.CLIENT_MSG.WINNER, player2.getPoints() - player2.getPointsNeeded());
+            } else {
+                //player 2 unable to make quota
+                socket.to(player1.getPlayerId()).emit(Constants.CLIENT_MSG.WINER, player1.getPoints() - player1.getPointsNeeded());
+                socket.to(player2.getPlayerId()).emit(Constants.CLIENT_MSG.LOSER, player2.getPoints() - player2.getPointsNeeded());
+            }
+        }
+    }
 
+    dealCardsToPlayers(game, player, numberOfCards, isCardVisible, isCardDown) {
+        this.players.find(function(elem, index, array) {
+            if (elem.getPlayerId() == player.getPlayerId()) {
+                
+                //set the owner of the cards
+                let cardsFromDeck = this.deck.dealCardsFromTop(numberOfCards).map(card => {
+                    card.setCurrentOwner(player.getPlayerId());
+                    card.setVisibility(isCardVisible);
+                    card.setIsCardDown(isCardDown);
+                })
+
+                elem.giveMultipleCards(cardsFromDeck);
+            }
+        })
+    }
+
+    /**
+     * SPECIAL ALLOWED ACTIONS
+     * 
+     * @param {*} game 
+     * @param {*} socket 
+     * @param {*} payload 
+     */
+    doSpecialAction(game, socket, socketId, payload) {
+        if (payload.actionName == this.getSpecialActions().SET_TRUMP) {
+            let requestedPlayer = null;
+            this.players.foreach(player => {
+                if (player.getPlayerId() == socketId) {
+                    requestedPlayer = player;
+                }
+            })
+            //the requested player must be the first player
+            if (payload.cardSuite != "" && 
+                this.trumpSuit == "" && 
+                requestedPlayer && 
+                requestedPlayer.getPlayerId() == this.firstPlayer) {
+                if (Card.POSSIBLE_CARD_TYPES.indexOf(cardSuite.ToUpperCase() > -1)) {
+                    this.trumpSuit = payload.cardSuite;
+                    socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
+                    socket.to(this.getOpponent(requestedPlayer)).emit(Constants.CLIENT_MSG.PICK_TRUMP, payload.cardSuite)
+                    return;
+                }
+            }
+
+            socket.emit(Constants.CLIENT_MSG.ERROR_ILLEGAL_MOVE);
+            return;
+        }
+
+        socket.emit(Constants.CLIENT_MSG.ERROR_ILLEGAL_MOVE);
+        return;
     }
 
     restartGame(game) {
@@ -127,6 +319,13 @@ class SaathAaath extends RuleBookAbstract {
         this.players.foreach(player => {
             player = new Player();
         });
+    }
+
+    //set special actions here
+    getSpecialActions() {
+        return {
+            SET_TRUMP: "SET_TRUMP"
+        }
     }
 }
 

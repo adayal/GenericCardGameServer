@@ -40,6 +40,9 @@ console.log(`Server listening on port ${port}`);
 // Setup socket.io
 const io = socketio(server);
 
+const game = new Game()
+var hasGameLoaded = false;
+
 // Listen for socket.io connections
 io.on('connection', socket => {
     console.log('Player connected!', socket.id);
@@ -52,40 +55,27 @@ io.on('connection', socket => {
         - START(game_selected) --> start game once all players are ready
     */
 
-    socket.on(Constants.MSG_TYPES.JOIN_GAME, joinGameAction);
-    socket.on(Constants.MSG_TYPES.DISCONNECT, disconnectPlayerAction);
-    socket.on(Constants.MSG_TYPES.PLAY_CARD, playCardAction);
-    socket.on(Constants.MSG_TYPES.START_GAME, startGameAction);
-});
-
-const game = new Game()
-var hasGameLoaded = false;
-
-function joinGameAction(playerName) {
-    //this is socket itself
-    game.addPlayer(this, playerName);
-}
-
-function disconnectPlayerAction() {
-    game.removePlayer(this);
-}
-
-/**
- * @param {playerName, {card}, destination} playedObj 
- */
-function playCardAction(playedObj) {
-    game.doAction(this, playedObj)
-}
-
-
-function startGameAction(gameSelected) {
-    if (Constants.GAMES_LOADED[gameSelected]) {
-        if (!game.loadGameRules(this, gameSelected)) {
-            //game already loaded, not supporting multiple game sessions right now
-            //throw back error
-        } else {
-            //successfully started game --> emit message
-            console.log("successfully started game: " + gameSelected);
+    socket.on(Constants.MSG_TYPES.JOIN_GAME, (id, msg) => {
+        game.addPlayer(id, msg);
+    });
+    socket.on(Constants.MSG_TYPES.DISCONNECT,(id) => {
+        game.removePlayer(this);
+    });
+    socket.on(Constants.MSG_TYPES.PLAY_CARD, (id, msg) => {
+        /**
+         * @param {playerName, {card}, destination} playedObj 
+         */
+        game.doAction(this, socket, id, msg);
+    });
+    socket.on(Constants.MSG_TYPES.START_GAME, (id, msg) => {
+        if (Constants.GAMES_LOADED[msg]) {
+            if (!game.loadGameRules(this, msg)) {
+                //game already loaded, not supporting multiple game sessions right now
+                //throw back error
+            } else {
+                //successfully started game --> emit message
+                console.log("successfully started game: " + msg);
+            }
         }
-    }
-}
+    });
+});

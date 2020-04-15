@@ -26,10 +26,11 @@ class Deck {
         return this.discardDeck;
     }
 
-    getPlayingField()
-
-    //returns true if successful in finding and giving
     playToField(card) {
+        this.playingField.push(card);
+        return true;
+        
+        /*
         for (let i = 0; i < this.innerDeck.length; i++) {
             if (this.innerDeck[i] == card) {
                 this.innerDeck.splice(card, 1);
@@ -38,6 +39,16 @@ class Deck {
             }
         }
         return false;
+        */
+        
+    }
+
+    getPlayingField() {
+        return this.playingField;
+    }
+
+    emptyPlayingField() {
+        this.playingField = [];
     }
 
     //void shuffles the deck
@@ -51,7 +62,7 @@ class Deck {
     resetDeck() {
         for (let i = 1; i <= 13; i++) {
             for (let j = 0; j < 4; j++) {
-                this.innerDeck.push(new Card(i, Card.getCardTypeByNumber(j), true));
+                this.innerDeck.push(new Card(i, Card.getCardTypeByNumber(j), true, false));
             }
         }
         this.discardCard = [];
@@ -60,6 +71,8 @@ class Deck {
     //Discard a card by removing it from the deck and moving it to the discard deck pile
     //return true if successful, false otherwise
     discardCard(cardToDiscard) {
+        if (!cardToDiscard)
+            return false;
         for (let i = 0; i < this.innerDeck.length; i++) {
             if (this.innerDeck[i] == cardToDiscard) {
                 this.discardCard.push(...this.innerDeck.splice(i, 1))
@@ -84,8 +97,18 @@ class Deck {
 
     getCard(payload) {
         if (Card.isValidCard(payload.number, payload.cardType)) {
-            return this.findCardInDeck(payload.number, payload.cardType)
+            let card = this.findCardInDeck(payload.number, payload.cardType)
+            card.setVisibility(payload.isVisible);
         }
+        return null;
+    }
+
+    dealCardsFromTop(numberOfCards) {
+        let cardsTaken = []
+        for (let i = 0; i < numberOfCards; i++) {
+            cardsTaken.push(giveCardFromTop());
+        }
+        return cardsTaken;
     }
 
     findCardInDeck(number, cardType) {

@@ -3,14 +3,42 @@
 const Constants = require('../shared/constants');
 
 class Card {
-    constructor(number, cardType, isDown) {
+    constructor(number, cardType, isDown, isVisible) {
         this.value = number;
         this.cardType = cardType;
+
+        //isCardDown -> Is the card faced-down?
         this.isCardDown = isDown;
+
+        //isVisible -> can any player see this card?
+        this.isVisible = isVisible;
+        this.previousOwners = [];
+        this.currentOwner = null;
+    }
+
+    getCurrentOwner() {
+        return this.currentOwner;
+    }
+
+    setCurrentOwner(owner) {
+        this.previousOwners.push(this.currentOwner);
+        this.currentOwner = owner;
+    }
+
+    getPreviousOwners() {
+        return this.previousOwners;
     }
 
     setIsCardDown(isDown) {
         this.isCardDown = isDown;
+    }
+
+    setVisibility(isVisible) {
+        this.isVisible = isVisible;
+    }
+
+    getVisibility() {
+        return this.isVisible;
     }
 
     getIsCardDown() {
@@ -75,5 +103,7 @@ class Card {
         return number < Constants.MAX_CARD_NUMBER && Constants[cardType];
     }
 }
+
+Card.POSSIBLE_CARD_TYPES = ["CLUB", "DIAMOND", "HEART", "SPADE"];
 
 export { Card };
