@@ -16,9 +16,9 @@ const webpackDevMiddleware = require('webpack-dev-middleware');
 const socketio = require('socket.io');
 
 
-const Constants = require('../shared/constants');
+const Constants = require('./src/shared/constants');
 const Game = require('./src/Game.js');
-const webpackConfig = require('../../webpack.dev.js');
+const webpackConfig = require('./webpack.dev.js');
 
 // Setup an Express server
 const app = express();
@@ -41,7 +41,6 @@ console.log(`Server listening on port ${port}`);
 const io = socketio(server);
 
 const game = new Game()
-var hasGameLoaded = false;
 
 // Listen for socket.io connections
 io.on('connection', socket => {

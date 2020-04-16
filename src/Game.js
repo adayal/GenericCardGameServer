@@ -1,9 +1,7 @@
-
 'use strict'
 
-import { Card } from "./Card";
-import { Player } from "./Player";
-import { RuleBookAbstract } from "./rule_book/Rulebook"
+const Player = require("./Player");
+const GameLoader = require("./rule_book/GameLoader");
 const Constants = require('./shared/constants');
 
 class Game {
@@ -12,8 +10,8 @@ class Game {
         this.players = {};
         this.loadedGames = {};
         Constants.GAMES_LOADED.forEach(gameName => {
-            this.loadedGames[gameName] = new RuleBookAbstract(gameName)
-        })
+            this.loadedGames[gameName] = new GameLoader(gameName)
+        });
     }
 
     loadGames(socketWhoStarted, gameSelected) {

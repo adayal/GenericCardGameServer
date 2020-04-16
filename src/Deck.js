@@ -1,7 +1,6 @@
 'use strict'
 
-import { Card } from "./Card";
-import { Player } from "./Player";
+const Card = require("./Card");
 
 class Deck {
     constructor() {
@@ -122,46 +121,4 @@ class Deck {
 
 }
 
-
-/*
-    constructor(...playerNames) {
-        this.players = []
-        playerNames.forEach(x => this.players.push(new Player(x)));
-        this.deck = new Deck();
-    }
-
-    dealCards(numToDeal = 1, specificPlayer = null) {
-        for (let i = 0; i < this.players.length; i++) {
-            if (specificPlayer != null) {
-                if (specificPlayer == this.players[i]) {
-                    for (let j = 0; j < numToDeal; j++) {
-                        let getCard = this.deck.giveCardFromTop();
-                        if (getCard != null)
-                            this.players[i].giveCard(getCard);
-                    }
-                    return true;
-                } else {
-                    //could not find player to give to
-                    return false;
-                }
-            } else {
-                //give to everyone
-                for (let j = 0; j < numToDeal; j++) {
-                    let getCard = this.deck.giveCardFromTop();
-                    if (getCard != null)
-                        this.players[i].giveCard(getCard);
-                }
-                return true;
-            }
-        }
-    }
-
-    get deck() {
-        return this.deck;
-    }
-
-
-*/
-
-
-export { Deck };
+module.exports = Deck;

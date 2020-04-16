@@ -1,6 +1,6 @@
 'use strict'
 
-const Constants = require('../shared/constants');
+const Constants = require('./shared/constants');
 
 class Card {
     constructor(number, cardType, isDown, isVisible) {
@@ -106,4 +106,5 @@ class Card {
 
 Card.POSSIBLE_CARD_TYPES = ["CLUB", "DIAMOND", "HEART", "SPADE"];
 
-export { Card };
+
+module.exports = Card;

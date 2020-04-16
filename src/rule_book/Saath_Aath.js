@@ -1,7 +1,9 @@
-import { RuleBookAbstract } from "./Rulebook";
-import { Deck } from "../Deck";
-import { Player } from "../Player";
-import { Card } from "../Card";
+'use strict'
+
+const Player = require("../Player");
+const RuleBookAbstract = require("./RulebookAbstract");
+const Card = require("../Card");
+const Deck = require("../Deck");
 const Constants = require('../shared/constants');
 
 class SaathAaath extends RuleBookAbstract {
@@ -329,4 +331,4 @@ class SaathAaath extends RuleBookAbstract {
     }
 }
 
-export { SaathAaath }
+module.exports = SaathAaath

@@ -4,16 +4,33 @@
   "description": "Generic Card Game ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.prod.js",
+    "develop": "cross-env NODE_ENV=development node index.js"
   },
   "author": "Amit Dayal",
   "license": "ISC",
   "dependencies": {
+    "@babel/polyfill": "^7.8.7",
     "body-parser": "^1.19.0",
     "browserify-middleware": "^8.1.1",
+    "cross-env": "^7.0.2",
     "express": "^4.17.1",
     "fs": "0.0.1-security",
+    "html-webpack-plugin": "^4.2.0",
     "path": "^0.12.7",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
+    "webpack": "^4.42.1",
+    "webpack-dev-middleware": "^3.7.2",
     "wrtc": "^0.4.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-flow": "^7.9.0",
+    "@babel/preset-react": "^7.9.4",
+    "babel": "^6.23.0"
   }
 }
