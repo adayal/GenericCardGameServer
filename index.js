@@ -55,7 +55,7 @@ io.on('connection', socket => {
     */
 
     socket.on(Constants.MSG_TYPES.JOIN_GAME, (id, msg) => {
-        game.addPlayer(id, msg);
+        game.addPlayer(socket, id, msg);
     });
     socket.on(Constants.MSG_TYPES.DISCONNECT,(id) => {
         game.removePlayer(this);

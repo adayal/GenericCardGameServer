@@ -1,7 +1,7 @@
 module.exports = Object.freeze({
-    GAMES_LOADED: {
-        SATH_AATH: 'SATH_AATH'
-    },
+    GAMES_LOADED: [
+        { SATH_AATH: 'SATH_AATH' }
+    ],
     MSG_TYPES: {
         JOIN_GAME: 'JOIN_GAME',
         DISCONNECT: 'DISCONNECT',

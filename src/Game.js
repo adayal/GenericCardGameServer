@@ -32,7 +32,7 @@ class Game {
         }
     }
 
-    addPlayer(socket, playerName) {
+    addPlayer(socket, socketId, playerName) {
         //prevent duplicate sockets and check if the game is already running
         if (this.gameSelected) {
             socket.emit(Constants.CLIENT_MSG.GAME_ALREADY_STARTED);
@@ -92,3 +92,5 @@ class Game {
         return this.sockets;
     }
 }
+
+module.exports = Game;

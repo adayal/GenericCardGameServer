@@ -21,6 +21,7 @@
     "path": "^0.12.7",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
+    "uws": "^10.148.1",
     "webpack": "^4.42.1",
     "webpack-dev-middleware": "^3.7.2",
     "wrtc": "^0.4.4"
@@ -31,6 +32,8 @@
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
-    "babel": "^6.23.0"
+    "babel": "^6.23.0",
+    "babel-loader": "^8.1.0",
+    "webpack-merge": "^4.2.2"
   }
 }
