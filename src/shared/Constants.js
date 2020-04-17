@@ -1,6 +1,6 @@
 module.exports = Object.freeze({
     GAMES_LOADED: [
-        { SATH_AATH: 'SATH_AATH' }
+        'SATH_AATH'
     ],
     MSG_TYPES: {
         JOIN_GAME: 'JOIN_GAME',
@@ -10,6 +10,7 @@ module.exports = Object.freeze({
     },
     CLIENT_MSG: {
         ERROR_GAME_NOT_LOADED: "ERROR_GAME_NOT_LOADED",
+        GENERIC_ERROR: "GENERIC_ERROR",
         ERROR_ILLEGAL_MOVE: "ERROR_ILLEGAL_MOVE",
         ACKNOWLEDGED: "ACKNOWLEDGED",
         ALREADY_PLAYER: "ALREADY_PLAYER",

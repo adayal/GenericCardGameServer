@@ -8,7 +8,8 @@ const Constants = require('../shared/constants');
 
 class SaathAaath extends RuleBookAbstract {
     constructor() {
-        this.gameLoaded = true;
+        super();
+        this.gameLoaded = false;
         this.gameInSession = false;
         this.REQUIRED_PLAYERS = 2;
         this.waitingForPlayer = this.firstPlayer;
@@ -75,26 +76,31 @@ class SaathAaath extends RuleBookAbstract {
     /*
     * Check Init
     */
-    canLoadGame(game, socket) {
+    canLoadGame(game) {
         if (this.gameLoaded) {
             return false;
         }
 
         this.players = game.getPlayers();
 
-        return !this.gameInSession && this.players.length == this.REQUIRED_PLAYERS && this.trumpSuit != "";
+        return !this.gameInSession && this.players.length == this.REQUIRED_PLAYERS && this.trumpSuit == "";
     }
 
     //helper method
     discardInitialCards() {
-        for (let i = 1; i <= 6; i++) {
+        for (let i = 2; i <= 6; i++) {
             for (let j = 0; j < 4; j++) {
-                this.deck.discardCard(getCard({number: i, cardType: j}));
+                this.deck.removeCard(this.deck.getCard({number: i, cardType: j}));
             }
         }
-        this.deck.discardCard(getCard({number: 7, cardType: 0}));
-        this.deck.discardCard(getCard({number: 7, cardType: 1}));
+        this.deck.removeCard(this.deck.getCard({number: 7, cardType: 0}));
+        this.deck.removeCard(this.deck.getCard({number: 7, cardType: 1}));
     }
+
+    setFirstPlayer(socketId) {
+        this.firstPlayer = socketId;
+    }
+
 
 
     /*
@@ -106,29 +112,29 @@ class SaathAaath extends RuleBookAbstract {
         this.deck = new Deck();
         this.discardInitialCards();
 
-        this.suffleDeck();
+        this.deck.shuffleDeck();
         //each player gets 15 cards but the card orientation can be different (up or down)
-        this.players.foreach(player => {
+        this.players.forEach(player => {
 
             //first 5 are faced down and visible (player's hand) 
             //next 5 are not visible and faced down (player's faced down hand)
             //next 5 are visible and faced up (player's faced up hand)
-            this.dealCardsToPlayers(game, player, 5, true, true);
-            this.dealCardsToPlayers(game, player, 5, false, true);
-            this.dealCardsToPlayers(game, player, 5, true, false);
+            this.dealCardsToPlayers(player, 5, true, true);
+            this.dealCardsToPlayers(player, 5, false, true);
+            this.dealCardsToPlayers(player, 5, true, false);
         })
         
         //Set the number of points needed for player 1 to 8
         this.players[0].setPointsNeeded(8);
         //Set the number of points needed for player 2 to 7
-        this.players[0].setPointsNeeded(7);
+        this.players[1].setPointsNeeded(7);
 
         //send cards to players
-        socket.to(this.players[0].emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[0].getHand()));
-        socket.to(this.players[1].emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[1].getHand()));
-
+        //TO DO FIX the broadcast to 2nd player
+        socket.broadcast.to(this.players[0].getPlayerId()).emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[0].getHand());
+        socket.broadcast.to(this.players[1].getPlayerId()).emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[1].getHand());
         //Ask player 1 to pick the trump
-        socket.to(this.players[0].emit(Constants.CLIENT_MSG.PICK_TRUMP));
+        socket.broadcast.to(this.players[0].getPlayerId()).emit(Constants.CLIENT_MSG.PICK_TRUMP);
     }
 
     /**
@@ -264,17 +270,18 @@ class SaathAaath extends RuleBookAbstract {
         }
     }
 
-    dealCardsToPlayers(game, player, numberOfCards, isCardVisible, isCardDown) {
-        this.players.find(function(elem, index, array) {
+    dealCardsToPlayers(player, numberOfCards, isCardVisible, isCardDown) {
+        this.players.find((elem) => {
             if (elem.getPlayerId() == player.getPlayerId()) {
                 
                 //set the owner of the cards
                 let cardsFromDeck = this.deck.dealCardsFromTop(numberOfCards).map(card => {
-                    card.setCurrentOwner(player.getPlayerId());
-                    card.setVisibility(isCardVisible);
-                    card.setIsCardDown(isCardDown);
+                    card[0].setCurrentOwner(player.getPlayerId());
+                    card[0].setVisibility(isCardVisible);
+                    card[0].setIsCardDown(isCardDown);
+                    return card[0];
                 })
-
+                console.log(cardsFromDeck);
                 elem.giveMultipleCards(cardsFromDeck);
             }
         })

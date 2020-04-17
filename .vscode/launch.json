@@ -14,7 +14,7 @@
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "develop"],
-            "port": 3001
+            "port": 9229
         }
     ]
 }

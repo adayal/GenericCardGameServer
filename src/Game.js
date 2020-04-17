@@ -7,16 +7,17 @@ const Constants = require('./shared/constants');
 class Game {
     constructor() {
         this.sockets = {};
-        this.players = {};
+        this.players = [];
         this.loadedGames = {};
+        this.GameLoader = new GameLoader();
         Constants.GAMES_LOADED.forEach(gameName => {
-            this.loadedGames[gameName] = new GameLoader(gameName)
+            this.loadedGames["" + gameName] = this.GameLoader.loadGame(gameName)
         });
     }
 
     loadGames(socketWhoStarted, gameSelected) {
         if (!this.gameSelected && this.loadedGames[gameSelected].canLoadGame(this)) {
-            this.loadedGames[gameSelected].startGame(this, socket);
+            this.loadedGames[gameSelected].startGame(this, socketWhoStarted);
             this.gameSelected = this.loadedGames[gameSelected];
             this.gameSelected.setFirstPlayer(socketWhoStarted.id);
             return true;
@@ -32,14 +33,15 @@ class Game {
         }
     }
 
-    addPlayer(socket, socketId, playerName) {
+    addPlayer(socket, playerName) {
         //prevent duplicate sockets and check if the game is already running
         if (this.gameSelected) {
             socket.emit(Constants.CLIENT_MSG.GAME_ALREADY_STARTED);
         }
         else if (!this.sockets[socket.id]) {
-            this.sockets[socket.id] = socket;
-            this.players[socket.id] = new Player(playerName);
+            let id = socket.id;
+            this.sockets[id] = socket;
+            this.players.push(new Player(playerName, id));
             socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
         } else {
             socket.emit(Constants.CLIENT_MSG.ALREADY_PLAYER);

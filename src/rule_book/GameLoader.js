@@ -8,18 +8,15 @@ const SaathAath = require("./Saath_Aath");
  */
 class GameLoader {
 
-    /**
-     * Init the game rulebook here
-     * @param {string} gameName Selected game name to play 
-     */
-    constructor(gameName) {
-        if (gameName == SaathAath) {
-            this.selectedGame = new SaathAath();
-        }
+    constructor() {
+
     }
 
-    setFirstPlayer(socketId) {
-        this.firstPlayer = socketId;
+    loadGame(gameName) {
+        if (gameName == 'SATH_AATH') {
+            this.selectedGame = new SaathAath();
+        }
+        return this.selectedGame;
     }
 
     //Payload: {actionName, player, card, dest}

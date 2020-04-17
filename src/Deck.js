@@ -5,41 +5,41 @@ const Card = require("./Card");
 class Deck {
     constructor() {
         //holds the deck before starting any game
-        this.innerDeck = [];
+        this._innerDeck = [];
         
         //holds the discarded deck
-        this.discardDeck = [];
+        this._discardDeck = [];
         
         //holds the playing field
-        this.playingField = [];
+        this._playingField = [];
 
         //reset the deck
         this.resetDeck()
     }
 
     get innerDeck() {
-        return this.innerDeck;
+        return this._innerDeck;
+    }
+
+    set innerDeck(settableDeck) {
+        this._innerDeck = settableDeck;
     }
 
     get discardDeck() {
-        return this.discardDeck;
+        return this._discardDeck;
+    }
+
+    set discardCard(settableDeck) {
+        this._discardDeck = settableDeck;
+    }
+
+    set playingField(settableDeck) {
+        this._playingField = settableDeck;
     }
 
     playToField(card) {
-        this.playingField.push(card);
+        this._playingField.push(card);
         return true;
-        
-        /*
-        for (let i = 0; i < this.innerDeck.length; i++) {
-            if (this.innerDeck[i] == card) {
-                this.innerDeck.splice(card, 1);
-                this.playingField.push(card);
-                return true;
-            }
-        }
-        return false;
-        */
-        
     }
 
     getPlayingField() {
@@ -52,38 +52,51 @@ class Deck {
 
     //void shuffles the deck
     shuffleDeck() {
-        for (let i = this.innerDeck.length - 1; i > 0; i--) {
+        for (let i = this._innerDeck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [this.innerDeck[i], this.innerDeck[j]] = [this.innerDeck[j], this.innerDeck[i]];
+            [this._innerDeck[i], this._innerDeck[j]] = [this._innerDeck[j], this._innerDeck[i]];
         }
     }
 
     resetDeck() {
         for (let i = 1; i <= 13; i++) {
             for (let j = 0; j < 4; j++) {
-                this.innerDeck.push(new Card(i, Card.getCardTypeByNumber(j), true, false));
+                this._innerDeck.push(new Card(i, Card.mapCardTypeToCardTypes(j), true, false));
             }
         }
-        this.discardCard = [];
     }
 
     //Discard a card by removing it from the deck and moving it to the discard deck pile
     //return true if successful, false otherwise
-    discardCard(cardToDiscard) {
+    removeCard(cardToDiscard) {
         if (!cardToDiscard)
             return false;
-        for (let i = 0; i < this.innerDeck.length; i++) {
-            if (this.innerDeck[i] == cardToDiscard) {
-                this.discardCard.push(...this.innerDeck.splice(i, 1))
-                return true;
+        this._innerDeck.find((card, index) => {
+            if (card && card.getCardValue() == cardToDiscard.getCardValue() && card.getCardType() == cardToDiscard.getCardType()) {
+                delete this._innerDeck[index];
+                this._discardDeck.push(card)
             }
-        }
-        return false;
+        });
+
+        //resize the deck
+        this.resizeDeck();
+        return true;
+    }
+
+    resizeDeck() {
+        this._innerDeck = this._innerDeck.filter(value => {
+            return value !== undefined
+        });
     }
 
     giveCardFromTop() {
-        if (this.innerDeck.length > 0) {
-            let topCard = this.innerDeck.splice(0, 1);
+        if (this._innerDeck.length > 0) {
+            let topCard = this._innerDeck.splice(0, 1);
+            this.resizeDeck();
+            if (!topCard) {
+                console.log(topCard)
+                console.log(this._innerDeck);
+            }
             return topCard;
         }
         return null;
@@ -98,6 +111,7 @@ class Deck {
         if (Card.isValidCard(payload.number, payload.cardType)) {
             let card = this.findCardInDeck(payload.number, payload.cardType)
             card.setVisibility(payload.isVisible);
+            return card;
         }
         return null;
     }
@@ -105,20 +119,19 @@ class Deck {
     dealCardsFromTop(numberOfCards) {
         let cardsTaken = []
         for (let i = 0; i < numberOfCards; i++) {
-            cardsTaken.push(giveCardFromTop());
+            cardsTaken.push(this.giveCardFromTop());
         }
         return cardsTaken;
     }
 
     findCardInDeck(number, cardType) {
-        this.innerDeck.foreach(card => {
-            if (card.getCardValue() == number && card.getCardType() == cardType) {
+        let foundCard = this._innerDeck.find(card => {
+            if (card && card.getCardValue() == number && card.getCardType() == Card.mapCardTypeToCardTypes(cardType)) {
                 return card;
             }
         });
-        return null;
+        return foundCard;
     }
-
 }
 
 module.exports = Deck;

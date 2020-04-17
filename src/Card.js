@@ -3,9 +3,9 @@
 const Constants = require('./shared/constants');
 
 class Card {
-    constructor(number, cardType, isDown, isVisible) {
+    constructor(number, type, isDown, isVisible) {
         this.value = number;
-        this.cardType = cardType;
+        this.cardType = type;
 
         //isCardDown -> Is the card faced-down?
         this.isCardDown = isDown;
@@ -80,27 +80,29 @@ class Card {
         return cardA.value > cardB.value ? 1 : cardA.value == cardB.value ? 0 : -1;
     }
 
-
-    static getCardTypeByNumber(number) {
-        let cardTypeName = ""
-        switch (number) {
-            case 0:
-                cardTypeName = "Club";
-                break;
-            case 1:
-                cardTypeName = "Diamond";
-                break;
-            case 2: 
-                cardTypeName = "Heart";
-                break;
-            default:
-                cardTypeName = "Spade";
-        }
-        return cardTypeName;
+    static isValidCard(number, cardType) {
+        return number < Constants.MAX_CARD_NUMBER && this.mapCardTypeToCardTypes(cardType) != "";
     }
 
-    static isValidCard(number, cardType) {
-        return number < Constants.MAX_CARD_NUMBER && Constants[cardType];
+    static mapCardTypeToCardTypes (cardTypeToCheck) {
+        let cardType = "";
+        switch(cardTypeToCheck) {
+            case 0:
+                cardType = Constants.CARD_TYPES.CLUB;
+                break;
+            case 1:
+                cardType = Constants.CARD_TYPES.DIAMOND;
+                break;
+            case 2:
+                cardType = Constants.CARD_TYPES.HEART;
+                break;
+            case 3:
+                cardType = Constants.CARD_TYPES.SPADE;
+                break;
+            default:
+                cardType = "";
+        }
+        return cardType;
     }
 }
 
