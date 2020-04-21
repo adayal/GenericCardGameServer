@@ -102,11 +102,6 @@ class Deck {
         return null;
     }
 
-    //{actionName, player, card, dest}
-    playToField(payload) {
-        
-    }
-
     getCard(payload) {
         if (Card.isValidCard(payload.number, payload.cardType)) {
             let card = this.findCardInDeck(payload.number, payload.cardType)

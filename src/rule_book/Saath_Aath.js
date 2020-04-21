@@ -38,7 +38,7 @@ class SaathAaath extends RuleBookAbstract {
         return this.players[0].getPlayerId() == currentPlayer.getPlayerId() ? this.players[1] : this.players[0];
     }
 
-    playCard(game, socket, socketPlayerId, payload) {
+    playCard(game, socket, payload) {
         
         evaluateRules(game, socket);
         
@@ -53,7 +53,7 @@ class SaathAaath extends RuleBookAbstract {
             return;
         }
 
-        let currentPlayer = this.players[0].getPlayerId == socketPlayerId ? this.player[0] : this.player[1];
+        let currentPlayer = this.players[0].getPlayerId == socket.id ? this.player[0] : this.player[1];
         let currentCard = currentPlayer.findCard(payload.card);
         
         if (!currentCard) {
@@ -65,7 +65,7 @@ class SaathAaath extends RuleBookAbstract {
         this.deck.playToField(currentCard);
         
         this.players.forEach(player => {
-            if (player.getPlayerId() == socketPlayerId) {
+            if (player.getPlayerId() == socket.id) {
                 player.playCard(currentCard);
             }
         });
@@ -130,11 +130,11 @@ class SaathAaath extends RuleBookAbstract {
         this.players[1].setPointsNeeded(7);
 
         //send cards to players
-        //TO DO FIX the broadcast to 2nd player
-        socket.broadcast.to(this.players[0].getPlayerId()).emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[0].getHand());
-        socket.broadcast.to(this.players[1].getPlayerId()).emit(Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[1].getHand());
-        //Ask player 1 to pick the trump
-        socket.broadcast.to(this.players[0].getPlayerId()).emit(Constants.CLIENT_MSG.PICK_TRUMP);
+        this.players[0].announceToPlayer(socket, Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[0].getHand());
+        this.players[1].announceToPlayer(socket, Constants.CLIENT_MSG.SEND_CURRENT_HAND, this.players[1].getHand());
+        
+        //first player to pick trump
+        this.players[0].announceToPlayer(socket, Constants.CLIENT_MSG.PICK_TRUMP);
     }
 
     /**
@@ -256,8 +256,7 @@ class SaathAaath extends RuleBookAbstract {
             let player2 = this.players[1];
             if (player1.getPoints() == player1.getPointsNeeded()) {
                 //game ended in draw
-                socket.to(player1.getPlayerId()).emit(Constants.CLIENT_MSG.NO_WINNER);
-                socket.to(player2.getPlayerId()).emit(Constants.CLIENT_MSG.NO_WINNER);
+                this.announceToAllPlayers(socket, Constants.CLIENT_MSG.NO_WINNER);
             } else if (player1.getPoints() < player1.getPointsNeeded()) {
                 //player 1 unable to make quota
                 socket.to(player1.getPlayerId()).emit(Constants.CLIENT_MSG.LOSER, player1.getPoints() - player1.getPointsNeeded());
@@ -294,23 +293,24 @@ class SaathAaath extends RuleBookAbstract {
      * @param {*} socket 
      * @param {*} payload 
      */
-    doSpecialAction(game, socket, socketId, payload) {
+    doSpecialAction(game, socket, payload) {
         if (payload.actionName == this.getSpecialActions().SET_TRUMP) {
             let requestedPlayer = null;
             this.players.foreach(player => {
-                if (player.getPlayerId() == socketId) {
+                if (player.getPlayerId() == socket.id) {
                     requestedPlayer = player;
                 }
-            })
+            });
             //the requested player must be the first player
             if (payload.cardSuite != "" && 
                 this.trumpSuit == "" && 
                 requestedPlayer && 
                 requestedPlayer.getPlayerId() == this.firstPlayer) {
-                if (Card.POSSIBLE_CARD_TYPES.indexOf(cardSuite.ToUpperCase() > -1)) {
+                if (Card.POSSIBLE_CARD_TYPES.indexOf(cardSuite.ToUpperCase()) > -1) {
                     this.trumpSuit = payload.cardSuite;
-                    socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
-                    socket.to(this.getOpponent(requestedPlayer)).emit(Constants.CLIENT_MSG.PICK_TRUMP, payload.cardSuite)
+                    this.players[0].announceToPlayer(socket, Constants.CLIENT_MSG.ACKNOWLEDGED);
+                    this.players[1].announceToPlayer(socket, Constants.CLIENT_MSG.PICK_TRUMP, payload.cardSuite);
+                    this.players[0].announceToPlayer(socket, Constants.CLIENT_MSG.YOUR_TURN);
                     return;
                 }
             }
@@ -335,6 +335,12 @@ class SaathAaath extends RuleBookAbstract {
         return {
             SET_TRUMP: "SET_TRUMP"
         }
+    }
+
+    announceToAllPlayers(socket, message, payload) {
+        this.players.forEach(x => {
+            x.announceToPlayer(socket, message, payload);
+        });
     }
 }
 

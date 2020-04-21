@@ -1,12 +1,13 @@
 'use strict'
 
 class Player {
-    constructor(playerName, playerId) {
+    constructor(playerName, socket) {
         this.playerName = playerName;
         this.hand = [];
-        this.playerId = playerId;
+        this.playerId = socket.id;
         this.points = 0;
         this.pointsNeeded = 0;
+        this.socket = socket;
     }
 
     getPointsNeeded() {
@@ -65,6 +66,13 @@ class Player {
 
     isHandEmpty() {
         return this.hand.length == 0;
+    }
+
+    announceToPlayer(socketFromGame, command, message) {
+        if (socketFromGame.id == this.socket.id)
+            socketFromGame.emit(command, message);
+        else
+            socketFromGame.to(this.socket.id).emit(command, message);
     }
 }
 

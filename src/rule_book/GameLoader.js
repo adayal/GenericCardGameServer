@@ -20,18 +20,18 @@ class GameLoader {
     }
 
     //Payload: {actionName, player, card, dest}
-    handle(game, socket, socketId, payload) {
+    handle(game, socket, payload) {
         if (!this.selectedGame) {
             socket.emit(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED);
             return;
         }
         if (payload.actionName == Constants.CLIENT_MSG.PLAY_CARD) {
-            this.selectedGame.playCard(game, socket, socketId, payload);
+            this.selectedGame.playCard(game, socket, payload);
             socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
             return;
         }
 
-        this.selectedGame.doSpecialAction(game, socket, socketId, payload);    
+        this.selectedGame.doSpecialAction(game, socket, payload);    
     }
 }
 

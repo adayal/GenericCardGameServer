@@ -63,11 +63,11 @@ io.on('connection', socket => {
     socket.on(Constants.MSG_TYPES.DISCONNECT,(id) => {
         game.removePlayer(this);
     });
-    socket.on(Constants.MSG_TYPES.PLAY_CARD, (id, msg) => {
+    socket.on(Constants.MSG_TYPES.DO_ACTION, (msg) => {
         /**
          * @param {playerName, {card}, destination} playedObj 
          */
-        game.doAction(this, socket, id, msg);
+        game.doAction(socket, msg);
     });
     socket.on(Constants.MSG_TYPES.START_GAME, (msg) => {
         if (msg && msg.game && Constants.GAMES_LOADED.includes(msg.game)) {

@@ -25,9 +25,9 @@ class Game {
         return false;
     }
 
-    doAction(game, socket, socketid, action) {
+    doAction(socket, action) {
         if (this.gameSelected) {
-            this.gameSelected.handle(this, socket, socketid, action);
+            this.gameSelected.handle(this, socket, action);
         } else {
             socket.emit(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED);
         }
@@ -41,7 +41,7 @@ class Game {
         else if (!this.sockets[socket.id]) {
             let id = socket.id;
             this.sockets[id] = socket;
-            this.players.push(new Player(playerName, id));
+            this.players.push(new Player(playerName, socket));
             socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
         } else {
             socket.emit(Constants.CLIENT_MSG.ALREADY_PLAYER);

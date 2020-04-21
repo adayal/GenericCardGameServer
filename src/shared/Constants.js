@@ -26,7 +26,9 @@ module.exports = Object.freeze({
         LOCAL_WINNER: "LOCAL_WINNER",
         LOSER: "LOSER", 
         LOCAL_LOSER: "LOCAL_LOSER",
-        SEND_CURRENT_HAND: "SEND_CURRENT_HAND"
+        SEND_CURRENT_HAND: "SEND_CURRENT_HAND",
+        DO_ACTION: "DO_ACTION",
+        YOUR_TURN: "YOUR_TURN"
     },
     POSSIBLE_ACTIONS: {
         PLAY_CARD: "PLAY_CARD",
