@@ -42,7 +42,7 @@ class Game {
             let id = socket.id;
             this.sockets[id] = socket;
             this.players.push(new Player(playerName, socket));
-            socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
+            this.announceToAllPlayers(socket, Constants.CLIENT_MSG.ACKNOWLEDGED, {playerName: playerName});
         } else {
             socket.emit(Constants.CLIENT_MSG.ALREADY_PLAYER);
         }
@@ -61,7 +61,7 @@ class Game {
             console.log("player removed successfully");
         } else {
             //game already started
-            if (this.gateSelected.removePlayer(this.players[socket.id])) {
+            if (this.gameSelected.removePlayer(this.players[socket.id])) {
                 console.log("game still continuing without player");
             } else {
                 //destroy game
@@ -92,6 +92,12 @@ class Game {
 
     getSockets() {
         return this.sockets;
+    }
+
+    announceToAllPlayers(socket, message, payload) {
+        this.players.forEach(x => {
+            x.announceToPlayer(socket, message, payload);
+        });
     }
 }
 

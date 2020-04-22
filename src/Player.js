@@ -60,7 +60,7 @@ class Player {
             if (card.getCardType() == cardToFind.type && card.getCardValue() == cardToFind.value) {
                 return card;
             }
-        })
+        });
         return null;
     }
 

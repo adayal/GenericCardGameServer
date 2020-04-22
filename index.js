@@ -23,9 +23,6 @@ const webpackConfig = require('./webpack.dev.js');
 // Setup an Express server
 const app = express();
 app.use(express.static('public'));
-app.get('/', function(req, res) {
-    res.send("hello world");
-});
 
 if (process.env.NODE_ENV === 'development') {
     // Setup Webpack for development
@@ -45,34 +42,27 @@ const io = socketio(server);
 
 const game = new Game()
 
-// Listen for socket.io connections
-io.on('connection', socket => {
-    console.log('Player connected!', socket.id);
-    
-    /*
-    Messages that can be received:
-        - JOIN --> player joins the game based on ip
-        - DISCONNECT --> remove player from game
-        - PLAY_CARD ({actionName, player, card, dest}) --> give card from soemone to someone (or discard)
-        - START(game_selected) --> start game once all players are ready
-    */
-
+/*
+Messages that can be received:
+    - JOIN --> player joins the game based on ip
+    - DISCONNECT --> remove player from game
+    - PLAY_CARD ({actionName, player, card, dest}) --> give card from soemone to someone (or discard)
+    - START(game_selected) --> start game once all players are ready
+*/
+io.on('connection', socket => {    
     socket.on(Constants.MSG_TYPES.JOIN_GAME, (data) => {
         game.addPlayer(socket, data);
     });
-    socket.on(Constants.MSG_TYPES.DISCONNECT,(id) => {
-        game.removePlayer(this);
+    socket.on(Constants.MSG_TYPES.DISCONNECT, () => {
+        game.removePlayer(socket);
     });
     socket.on(Constants.MSG_TYPES.DO_ACTION, (msg) => {
-        /**
-         * @param {playerName, {card}, destination} playedObj 
-         */
         game.doAction(socket, msg);
     });
+
     socket.on(Constants.MSG_TYPES.START_GAME, (msg) => {
         if (msg && msg.game && Constants.GAMES_LOADED.includes(msg.game)) {
             if (game.loadGames(socket, msg.game)) {
-                console.log("successfully started game: " + msg.game);
                 socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
             } else {
                 socket.emit(Constants.CLIENT_MSG.GENERIC_ERROR);

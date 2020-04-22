@@ -154,15 +154,12 @@ class SaathAaath extends RuleBookAbstract {
             return a.points + b.points;
         }, 0);
 
-            if (this.checkForWin(game, socket, totalPoints)) {
-                //houskeeping
-                this.restartGame(game);
-            } else {
-            //no winner yet, keep playing the game
+        if (this.checkForWin(game, socket, totalPoints)) {
+            this.restartGame(game);
+        } else {
             if (this.deck.getPlayingField() != this.REQUIRED_PLAYERS) {
                 return;
             }
-
             let localField = this.deck.getPlayingField();
             /**
              * Cards are evaluated in the following order:
@@ -256,7 +253,7 @@ class SaathAaath extends RuleBookAbstract {
             let player2 = this.players[1];
             if (player1.getPoints() == player1.getPointsNeeded()) {
                 //game ended in draw
-                this.announceToAllPlayers(socket, Constants.CLIENT_MSG.NO_WINNER);
+                game.announceToAllPlayers(socket, Constants.CLIENT_MSG.NO_WINNER);
             } else if (player1.getPoints() < player1.getPointsNeeded()) {
                 //player 1 unable to make quota
                 socket.to(player1.getPlayerId()).emit(Constants.CLIENT_MSG.LOSER, player1.getPoints() - player1.getPointsNeeded());
@@ -335,12 +332,6 @@ class SaathAaath extends RuleBookAbstract {
         return {
             SET_TRUMP: "SET_TRUMP"
         }
-    }
-
-    announceToAllPlayers(socket, message, payload) {
-        this.players.forEach(x => {
-            x.announceToPlayer(socket, message, payload);
-        });
     }
 }
 
