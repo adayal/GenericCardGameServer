@@ -59,6 +59,9 @@ io.on('connection', socket => {
     socket.on(Constants.MSG_TYPES.DO_ACTION, (msg) => {
         game.doAction(socket, msg);
     });
+    socket.on(Constants.MSG_TYPES.SEND_CHAT_MSG, (msg) => {
+        game.handleChatMessage(socket, Constants.MSG_TYPES.RECIEVE_CHAT_MSG, msg);
+    })
 
     socket.on(Constants.MSG_TYPES.START_GAME, (msg) => {
         if (msg && msg.game && Constants.GAMES_LOADED.includes(msg.game)) {

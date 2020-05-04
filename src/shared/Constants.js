@@ -6,7 +6,10 @@ module.exports = Object.freeze({
         JOIN_GAME: 'JOIN_GAME',
         DISCONNECT: 'DISCONNECT',
         PLAY_CARD: 'PLAY_CARD',
-        START_GAME: 'START_GAME'
+        START_GAME: 'START_GAME',
+        SEND_CHAT_MSG: 'SEND_CHAT_MSG',
+        RECIEVE_CHAT_MSG: 'RECIEVE_CHAT_MSG',
+        NOT_CONNECTED: 'NOT_CONNECTED'
     },
     CLIENT_MSG: {
         ERROR_GAME_NOT_LOADED: "ERROR_GAME_NOT_LOADED",

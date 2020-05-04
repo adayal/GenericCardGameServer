@@ -29,6 +29,7 @@ class Game {
         if (this.gameSelected) {
             this.gameSelected.handle(this, socket, action);
         } else {
+            console.log("at action");
             socket.emit(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED);
         }
     }
@@ -94,10 +95,24 @@ class Game {
         return this.sockets;
     }
 
-    announceToAllPlayers(socket, message, payload) {
+    announceToAllPlayers(socket, command, payload, skipCurrent) {
         this.players.forEach(x => {
-            x.announceToPlayer(socket, message, payload);
+            if (skipCurrent && x.getPlayerId() == socket.id) {
+            } else {
+                x.announceToPlayer(socket, command, payload);
+            }
         });
+    }
+
+    handleChatMessage(socket, command, payload) {
+        if (this.gameSelected) {
+            console.log("sending message: " + payload);
+            console.log("sending command: " + command);
+            this.announceToAllPlayers(socket, command, payload);
+            socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
+        } else {
+            socket.emit(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED, Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED);
+        }
     }
 }
 

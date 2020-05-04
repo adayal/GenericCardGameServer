@@ -69,10 +69,12 @@ class Player {
     }
 
     announceToPlayer(socketFromGame, command, message) {
-        if (socketFromGame.id == this.socket.id)
+        if (socketFromGame.id == this.socket.id) {
             socketFromGame.emit(command, message);
-        else
+        }
+        else {
             socketFromGame.to(this.socket.id).emit(command, message);
+        }
     }
 }
 

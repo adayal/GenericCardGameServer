@@ -1,6 +1,60 @@
 <html>
-<button id="joinGameButton">Join Game!</button>
-<input type="text" id="nameField">Enter Handle</input>
-<div id="messageFromServer"></div>
-<div id="opponentName"></div>
+    <head>
+        <title>Card Games</title>
+    </head>
+    <body>
+        <button id="joinGameButton">Join Game!</button>
+        <br />
+        <br />
+        <button id="playGameButton">Play Game!</button>
+        <br />
+        <input type="text" id="nameField">Enter Handle</input>
+        <div id="messageFromServer"></div>
+        <div id="opponentName"></div>
+
+        <div class="row">
+            <div class="column">
+                <div class="playingCards" id="playingField">
+                    <ul class="table">
+                        <li>
+                            <div class="card rank-7 spades" id="opponentsPlay">
+                                <span class="rank">7</span>
+                                <span class="suit">&spades;</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="playingCards">
+                    <ul class="table" id="playerCardsInHand">
+                    </ul>
+                </div>
+                <div class="playingCards">
+                    <ul class="table" id="playerCardsOnField">
+                    </ul>
+                </div>
+                <div class="playingCards">
+                    <ul class="table" id="playerCardsFacedDown">
+                    </ul>
+                </div>
+            </div>
+            <div class="column">
+                <div id="chatContainer" class="chatContainer">
+                    <div class="container">
+                        <p>Player 1 Says:  </p>
+                        <p>Hello. How are you today?</p>
+                        <span class="time-right">11:00</span>
+                    </div>
+                    <div class="container darker">
+                        <p>Server Says:  </p>
+                        <p>Hello. How are you today?</p>
+                        <span class="time-right">11:00</span>
+                    </div>
+                </div>
+                <textarea id="preMessageArea" maxlength="125" class="preMessageArea"></textarea>
+                <br />
+                <br />
+                <button id="sendMessageButton">Send Message</button>
+            </div>
+        </div>
+    </body>
 </html> 
