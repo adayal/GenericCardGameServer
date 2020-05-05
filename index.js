@@ -14,10 +14,11 @@ const express = require('express');
 const webpack = require('webpack');
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const socketio = require('socket.io');
+const RoomManagement = require('./src/RoomManagement.js')
 
 
 const Constants = require('./src/shared/constants');
-const Game = require('./src/Game.js');
+
 const webpackConfig = require('./webpack.dev.js');
 
 // Setup an Express server
@@ -40,7 +41,10 @@ console.log(`Server listening on port ${port}`);
 // Setup socket.io
 const io = socketio(server);
 
-const game = new Game()
+//const game = new Game()
+
+//global
+const roomManagement = new RoomManagement();
 
 /*
 Messages that can be received:
@@ -49,29 +53,28 @@ Messages that can be received:
     - PLAY_CARD ({actionName, player, card, dest}) --> give card from soemone to someone (or discard)
     - START(game_selected) --> start game once all players are ready
 */
-io.on('connection', socket => {    
+io.on('connection', socket => {
+    socket.on(Constants.MSG_TYPES.GET_ROOMS, () => {
+        roomManagement.getRoomNames(socket);
+    });
     socket.on(Constants.MSG_TYPES.JOIN_GAME, (data) => {
-        game.addPlayer(socket, data);
+        roomManagement.joinRoom(socket, data);
     });
+
     socket.on(Constants.MSG_TYPES.DISCONNECT, () => {
-        game.removePlayer(socket);
+        //game.removePlayer(socket);
     });
+    
+    socket.on(Constants.MSG_TYPES.CREATE_ROOM, (data) => {
+        roomManagement.createRoom(socket, data);
+    })
     socket.on(Constants.MSG_TYPES.DO_ACTION, (msg) => {
-        game.doAction(socket, msg);
+        roomManagement.handleAction(socket, msg);
     });
     socket.on(Constants.MSG_TYPES.SEND_CHAT_MSG, (msg) => {
-        game.handleChatMessage(socket, Constants.MSG_TYPES.RECIEVE_CHAT_MSG, msg);
-    })
-
+        roomManagement.handleChatMessage(io, socket, msg);
+    });
     socket.on(Constants.MSG_TYPES.START_GAME, (msg) => {
-        if (msg && msg.game && Constants.GAMES_LOADED.includes(msg.game)) {
-            if (game.loadGames(socket, msg.game)) {
-                socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
-            } else {
-                socket.emit(Constants.CLIENT_MSG.GENERIC_ERROR);
-            }
-        } else {
-            socket.emit(Constants.CLIENT_MSG.GENERIC_ERROR);
-        }
+        roomManagement.handleAction(socket, msg, Constants.MSG_TYPES.START_GAME);
     });
 });
