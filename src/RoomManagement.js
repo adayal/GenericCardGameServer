@@ -1,33 +1,29 @@
 'use strict';
 
 const Game = require('./Game.js');
+const Room = require('./Room.js')
 const Constants = require('./shared/constants');
 
 class RoomManagement {
     constructor() {
         //master list of rooms mapped by id to the current game at play
-        //structure --> rooms[{roomId: 'abc', gameInstance: gameObj, sockets: [socket1, socket2]}]
         this.rooms = [];
     }
 
     getRoomNames(socket) {
         let roomsOut = [];
         this.rooms.forEach(room => {
-            roomsOut.push(room.roomId);
+            roomsOut.push(room.getRoomId());
         });
         socket.emit(Constants.MSG_TYPES.SEND_ROOMS, roomsOut);
     }
 
     createRoom(socket, data) {
         let roomName = data.roomName;
+        let password = data.password ? data.password : '';
         if (!this.getRoomByName(roomName)) {
-            this.rooms.push({
-                'roomId': roomName,
-                'gameInstance': new Game(),
-                'sockets': [socket],
-                'canJoinRoom': true,
-                'password': '' //can set password to validate private rooms
-            });
+            let room = new Room(roomName, new Game(), socket, true, password);
+            this.rooms.push(room);
             socket.join(roomName);
             socket.room = roomName;
             socket.emit(Constants.MSG_TYPES.ROOM_CREATED);
@@ -56,7 +52,7 @@ class RoomManagement {
                 socket.emit(Constants.MSG_TYPES.WRONG_PASSWORD);
                 return;
             }
-            roomToJoin.sockets.push(socket);
+            roomToJoin.addSocket(socket);
             socket.join(requestedRoom);
             socket.room = requestedRoom;
             roomToJoin.gameInstance.addPlayer(socket, data);
@@ -128,7 +124,9 @@ class RoomManagement {
     changeRoomState(roomName, state, value) {
         for (let i = 0; i < this.rooms.length; i++) {
             if (this.rooms[i].roomId == roomName) {
-                this.rooms[i][state] = value;
+                if (state == "canJoinRoom") {
+                    this.rooms[i].canJoinRoom = value;
+                }
             }
         }
     }

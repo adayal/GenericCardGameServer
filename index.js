@@ -16,7 +16,6 @@ const webpackDevMiddleware = require('webpack-dev-middleware');
 const socketio = require('socket.io');
 const RoomManagement = require('./src/RoomManagement.js')
 
-
 const Constants = require('./src/shared/constants');
 
 const webpackConfig = require('./webpack.dev.js');
@@ -41,7 +40,6 @@ console.log(`Server listening on port ${port}`);
 // Setup socket.io
 const io = socketio(server);
 
-//const game = new Game()
 
 //global
 const roomManagement = new RoomManagement();
