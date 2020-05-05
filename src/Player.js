@@ -69,6 +69,9 @@ class Player {
     }
 
     announceToPlayer(socketFromGame, command, message) {
+        console.log("current command:  " + command);
+        console.log("current message: " + message);
+        console.log(socketFromGame);
         if (socketFromGame.id == this.socket.id) {
             socketFromGame.emit(command, message);
         }

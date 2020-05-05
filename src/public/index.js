@@ -83,12 +83,16 @@ function registerMessageListeners() {
     connectedPromise.then(() => {
         socket.on(Constants.CLIENT_MSG.ACKNOWLEDGED, acknowledgeServerMessage);
         socket.on(Constants.CLIENT_MSG.SEND_CURRENT_HAND, loadCurrentHand);
-        socket.on(Constants.CLIENT_MSG.RECIEVE_CHAT_MSG, receiveChatMessage); 
+        socket.on(Constants.CLIENT_MSG.RECIEVE_CHAT_MSG, function(msg){
+            console.log("hi there");
+            console.log(msg);            
+        }); 
         socket.on(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED, acknowledgeServerErrorMessage);
     });
 }
 
 function acknowledgeServerMessage(msg) {
+    console.log("message from server: " + msg);
     if (msg && msg.playerName && msg.playerName != nameField.value) {
         //server will announce that opponent has joined
         opponentName = msg.playerName;
@@ -107,7 +111,7 @@ function acknowledgeServerErrorMessage(msg) {
     }
 }
 
-function receiveChatMessage() {
+function receiveChatMessage(msg) {
     console.log("I received something");
     console.log(msg);
     if (msg.playerId == socket.id) {
@@ -249,5 +253,4 @@ function constructMessage(message, sender) {
 function addMessageToChat(message, sender) {
     let constructedMessage = constructMessage(message, sender);
     chatContainerElem.appendChild(constructedMessage);
-    console.log(constructedMessage);
 }
