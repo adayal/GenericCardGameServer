@@ -72,7 +72,7 @@ io.on('connection', socket => {
         roomManagement.handleAction(socket, msg);
     });
     socket.on(Constants.MSG_TYPES.SEND_CHAT_MSG, (msg) => {
-        roomManagement.handleChatMessage(io, socket, msg);
+        roomManagement.handleChatMessage(socket, msg);
     });
     socket.on(Constants.MSG_TYPES.START_GAME, (msg) => {
         roomManagement.handleAction(socket, msg, Constants.MSG_TYPES.START_GAME);

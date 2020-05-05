@@ -24,8 +24,11 @@ class RoomManagement {
             this.rooms.push({
                 'roomId': roomName,
                 'gameInstance': new Game(),
-                'sockets': [socket]
+                'sockets': [socket],
+                'canJoinRoom': true,
+                'password': '' //can set password to validate private rooms
             });
+            socket.join(roomName);
             socket.room = roomName;
             socket.emit(Constants.MSG_TYPES.ROOM_CREATED);
         } else {
@@ -36,14 +39,26 @@ class RoomManagement {
 
     joinRoom(socket, data) {
         let requestedRoom = data.requestedRoom;
+        let password = data.password ? data.password : ''; //default to no password
         let roomToJoin = this.getRoomByName(requestedRoom);
         if (roomToJoin) {
             if (this.hasAlreadyJoinedRoom(roomToJoin, socket)) {
                 socket.emit(Constants.MSG_TYPES.ALREADY_JOINED_ROOM);
                 return;
             }
+            if (!roomToJoin.canJoinRoom) {
+                //if locked, prevent game joining
+                socket.emit(Constants.CLIENT_MSG.GAME_ALREADY_STARTED);
+                return;
+            }
+            if (roomToJoin.password != password) {
+                //if password is incorrect
+                socket.emit(Constants.MSG_TYPES.WRONG_PASSWORD);
+                return;
+            }
             roomToJoin.sockets.push(socket);
-            socket.room = roomToJoin.roomId;
+            socket.join(requestedRoom);
+            socket.room = requestedRoom;
             roomToJoin.gameInstance.addPlayer(socket, data);
         } else {
             socket.emit(Constants.MSG_TYPES.ROOM_NOT_CREATED);
@@ -76,6 +91,8 @@ class RoomManagement {
             if (roomToSendAction) {
                 if (msg && msg.game && Constants.GAMES_LOADED.includes(msg.game)) {
                     if (roomToSendAction.gameInstance.loadGames(socket, msg.game)) {
+                        //prevent anyone else from joining the game (lock the game)
+                        changeRoomState(socket.room, 'canJoinGame', false);
                         socket.emit(Constants.CLIENT_MSG.ACKNOWLEDGED);
                     } else {
                         socket.emit(Constants.CLIENT_MSG.GENERIC_ERROR);
@@ -95,14 +112,24 @@ class RoomManagement {
         }
     }
 
-    handleChatMessage(io, socket, msg) {
+    handleChatMessage(socket, msg) {
         let roomToSendAction = this.getRoomByName(socket.room);
         if (roomToSendAction) {
-            //io.sockets["in"](socket.room).emit(Constants.MSG_TYPES.RECIEVE_CHAT_MSG, msg);
-            //socket.to(socket.room).emit(Constants.MSG_TYPES.RECIEVE_CHAT_MSG, msg);
+            if (msg.action && (msg.action == Constants.CHAT_STATES.TYPING || msg.action == Constants.CHAT_STATES.STOP_TYPING)) {
+                socket.broadcast.to(socket.room).emit(msg.action, msg);
+                return;
+            }
             socket.broadcast.to(socket.room).emit(Constants.MSG_TYPES.RECIEVE_CHAT_MSG, msg);
         } else {
             socket.emit(Constants.MSG_TYPES.ROOM_NOT_JOINED);
+        }
+    }
+
+    changeRoomState(roomName, state, value) {
+        for (let i = 0; i < this.rooms.length; i++) {
+            if (this.rooms[i].roomId == roomName) {
+                this.rooms[i][state] = value;
+            }
         }
     }
 }
