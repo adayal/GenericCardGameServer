@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const Player = require("./Player");
 const GameLoader = require("./rule_book/GameLoader");
