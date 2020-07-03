@@ -2,6 +2,20 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+let configureWebPack = new HtmlWebpackPlugin({
+  filename: 'menu.html',
+  template: 'src/public/html/menu.html',
+});
+
+let exposedHtml = ['index', 'showAvailableGames', 'showAvailableRooms'];
+
+let htmlFileMapper = exposedHtml.map(function(name) {
+  return new HtmlWebpackPlugin({
+    filename: name + '.html',
+    template: 'src/public/html/' + name + '.html'
+  })
+});
+
 module.exports = {
   entry: {
     game: './src/public/index.js',
@@ -43,9 +57,6 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css'
     }),
-    new HtmlWebpackPlugin({
-      filename: 'index.html',
-      template: 'src/public/html/index.html',
-    }),
-  ]
+    configureWebPack
+  ].concat(htmlFileMapper)
 };

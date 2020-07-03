@@ -10,6 +10,8 @@ class RoomManagement {
         this.rooms = [];
     }
 
+    //@TODO create pruning method to destroy games that are ended or games past time limit
+
     getRoomNames(socket) {
         let roomsOut = [];
         this.rooms.forEach(room => {

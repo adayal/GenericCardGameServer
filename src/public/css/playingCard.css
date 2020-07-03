@@ -696,3 +696,8 @@
       height: 70px;
       resize: none;
   }
+
+  .mainMenu {
+      padding: 70px 0;
+      text-align: center;
+  }

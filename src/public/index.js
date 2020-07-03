@@ -1,8 +1,6 @@
-const io = require('socket.io-client')
 const Constants = require('../shared/constants');
+import { connect } from './socketBuilder';
 
-const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
-const socket = io(`${socketProtocol}://${window.location.host}`, { reconnection: true, transports: ['websocket'] });
 const joinGameButtonElem = document.getElementById("joinGameButton");
 const playGamebuttonElem = document.getElementById("playGameButton");
 const nameField = document.getElementById("nameField");
@@ -20,40 +18,20 @@ var playerCardsOnFieldShown = [];
 var gameCardsOnField = [];
 var opponentsCardsOnField = [];
 var opponentName = "";
-var isConnected = false;
 var isPlayer = false;
 
 import './css/playingCard.css';
+import './input.js';
 
+Promise.all([
+    connect()
+]).then(() => {
+    console.log("connected to the server")
+}).catch(console.error)
 
-const connectedPromise = new Promise(resolve => {
-    socket.on('connect', () => {
-      console.log('Connected to server!');
-      resolve();
-      isConnected = true;
-    });
-    socket.on('reconnect_attempt', () => {
-        console.log("trying to reconnect");
-    });
-    socket.on('reconnect_error', () => {
-        console.log("reconnect errored");
-    });
-    socket.on('reconnect_failed', () => {
-        console.log("reconnect failed");
-    });
-    socket.on('reconnect', (attemptNumber) => {
-        console.log("trying to connected #" + attemptNumber);
-    });
-    socket.on('disconnect', (reason) => {
-        console.log("disconnected because: " + reason);
-    });
-    socket.on('error', (error) => {
-        console.log("disconnected because of error: " + error);
-    })
-  });
-
-  joinGameButtonElem.onclick = () => {
-    registerMessageListeners();
+/*
+joinGameButtonElem.onclick = () => {
+    //registerMessageListeners();
     socket.emit(Constants.MSG_TYPES.JOIN_GAME, nameField.value);
 }
 
@@ -78,18 +56,7 @@ sendMessageButtonElem.onclick = () => {
         acknowledgeServerErrorMessage(Constants.CLIENT_MSG.NOT_CONNECTED);
     }
 }
-
-function registerMessageListeners() {
-    connectedPromise.then(() => {
-        socket.on(Constants.CLIENT_MSG.ACKNOWLEDGED, acknowledgeServerMessage);
-        socket.on(Constants.CLIENT_MSG.SEND_CURRENT_HAND, loadCurrentHand);
-        socket.on(Constants.CLIENT_MSG.RECIEVE_CHAT_MSG, function(msg){
-            console.log("hi there");
-            console.log(msg);            
-        }); 
-        socket.on(Constants.CLIENT_MSG.ERROR_GAME_NOT_LOADED, acknowledgeServerErrorMessage);
-    });
-}
+*/
 
 function acknowledgeServerMessage(msg) {
     console.log("message from server: " + msg);

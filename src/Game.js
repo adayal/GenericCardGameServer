@@ -13,6 +13,10 @@ class Game {
         Constants.GAMES_LOADED.forEach(gameName => {
             this.loadedGames["" + gameName] = this.GameLoader.loadGame(gameName)
         });
+
+
+        this.gameStart = Date.now();
+        this.gameTimeLimit = 1; //time in hours
     }
 
     loadGames(socketWhoStarted, gameSelected) {

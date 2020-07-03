@@ -1,7 +1,5 @@
 'use strict';
 
-const Constants = require('./shared/constants');
-
 class Room {
     constructor(roomId, gameInstance, socket, canJoinRoom, password) {
         this.roomId = roomId;
