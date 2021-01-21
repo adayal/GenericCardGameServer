@@ -20,7 +20,7 @@
     "html-webpack-plugin": "^4.2.0",
     "mini-css-extract-plugin": "^0.9.0",
     "path": "^0.12.7",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "socket.io-client": "^2.3.0",
     "uws": "^10.148.1",
     "webpack": "^4.42.1",
